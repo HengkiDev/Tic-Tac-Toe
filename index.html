@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Multiplayer</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --background: #0f172a;
+            --text: #f8fafc;
+            --card: #1e293b;
+            --border: #334155;
+            --x-color: #ec4899;
+            --o-color: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 20% 35%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 75% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 24px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        /* Lobby Screen */
+        .lobby {
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, var(--secondary), #db2777);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 5px 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .game-code {
+            background-color: rgba(99, 102, 241, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 15px 0;
+            border: 1px dashed rgba(99, 102, 241, 0.5);
+            user-select: all;
+        }
+
+        .instructions {
+            font-size: 14px;
+            opacity: 0.8;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        /* Game Board */
+        .game {
+            display: none;
+        }
+
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .player {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .player.active {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .player.x {
+            background-color: rgba(236, 72, 153, 0.2);
+            border: 2px solid var(--x-color);
+        }
+
+        .player.o {
+            background-color: rgba(59, 130, 246, 0.2);
+            border: 2px solid var(--o-color);
+        }
+
+        .player-symbol {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .player.x .player-symbol {
+            color: var(--x-color);
+        }
+
+        .player.o .player-symbol {
+            color: var(--o-color);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin: 20px 0;
+        }
+
+        .cell {
+            position: relative;
+            aspect-ratio: 1;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .cell.x {
+            color: var(--x-color);
+        }
+
+        .cell.o {
+            color: var(--o-color);
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            height: 27px;
+        }
+
+        .winning-message {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .winning-message.x-wins {
+            background-color: rgba(236, 72, 153, 0.2);
+            color: var(--x-color);
+            border: 2px solid var(--x-color);
+        }
+
+        .winning-message.o-wins {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: var(--o-color);
+            border: 2px solid var(--o-color);
+        }
+
+        .winning-message.draw {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--text);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .loading {
+            padding-left: 5px;
+            display: inline-block;
+        }
+
+        .loading::after {
+            content: '';
+            animation: ellipsis 1.5s infinite;
+        }
+
+        @keyframes ellipsis {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 16px;
+            }
+            
+            .player-symbol {
+                font-size: 20px;
+            }
+            
+            .cell {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Lobby Screen -->
+        <div id="lobby" class="card lobby">
+            <h1 class="title">Tic-Tac-Toe Multiplayer</h1>
+            
+            <div class="initial-menu">
+                <button id="create-game" class="btn">Buat Game Baru</button>
+                <div class="instructions">atau</div>
+                <div class="input-group">
+                    <input type="text" id="join-code-input" placeholder="Masukkan kode game" maxlength="6">
+                    <button id="join-game" class="btn secondary">Gabung Game</button>
+                </div>
+            </div>
+            
+            <div id="waiting-area" class="hidden">
+                <div class="instructions">Bagikan kode game ini ke teman Anda:</div>
+                <div id="game-code" class="game-code"></div>
+                <div class="status">
+                    Menunggu pemain lain bergabung<span class="loading"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game" class="card game">
+            <div class="player-info">
+                <div id="player-x" class="player x">
+                    <div class="player-symbol">X</div>
+                    <div class="player-name">Pemain 1</div>
+                </div>
+                <div id="player-o" class="player o">
+                    <div class="player-symbol">O</div>
+                    <div class="player-name">Pemain 2</div>
+                </div>
+            </div>
+            
+            <div id="board" class="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div id="winning-message" class="winning-message">
+                Game Selesai!
+            </div>
+            
+            <button id="play-again" class="btn hidden">Main Lagi</button>
+            <button id="return-lobby" class="btn secondary">Kembali ke Lobby</button>
+        </div>
+    </div>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyAT_4TSbCaB4EdHBc2Y-uXlrq1fOpMpf94",
+  authDomain: "games-cabf8.firebaseapp.com",
+  projectId: "games-cabf8",
+  storageBucket: "games-cabf8.firebasestorage.app",
+  messagingSenderId: "332370917032",
+  appId: "1:332370917032:web:b94f103812a8d67fa1349d",
+  measurementId: "G-1X397BFMQN"
+};
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Elements
+        const lobbyScreen = document.getElementById('lobby');
+        const gameScreen = document.getElementById('game');
+        const initialMenu = document.querySelector('.initial-menu');
+        const waitingArea = document.getElementById('waiting-area');
+        const gameCodeDisplay = document.getElementById('game-code');
+        const joinCodeInput = document.getElementById('join-code-input');
+        const createGameBtn = document.getElementById('create-game');
+        const joinGameBtn = document.getElementById('join-game');
+        const playerX = document.getElementById('player-x');
+        const playerO = document.getElementById('player-o');
+        const cells = document.querySelectorAll('.cell');
+        const statusDisplay = document.getElementById('status');
+        const winningMessage = document.getElementById('winning-message');
+        const playAgainBtn = document.getElementById('play-again');
+        const returnLobbyBtn = document.getElementById('return-lobby');
+        
+        // Game variables
+        let gameId = null;
+        let playerId = null;
+        let playerSymbol = null;
+        let currentTurn = null;
+        let gameState = null;
+        let gameRef = null;
+        let gameActive = false;
+        
+        // Generate a random game code (6 characters)
+        function generateGameCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+        
+        // Create a new game
+        function createGame() {
+            gameId = generateGameCode();
+            playerId = 'player1';
+            playerSymbol = 'X';
+            
+            // Initialize game state
+            gameState = Array(9).fill('');
+            
+            // Set up game in Firebase
+            gameRef = database.ref(`games/${gameId}`);
+            gameRef.set({
+                player1: true,
+                player2: false,
+                currentTurn: 'player1',
+                board: gameState,
+                winner: null,
+                gameActive: true
+            });
+            
+            // Listen for changes in the game state
+            setupGameListeners();
+            
+            // Show waiting area with game code
+            initialMenu.classList.add('hidden');
+            waitingArea.classList.remove('hidden');
+            gameCodeDisplay.textContent = gameId;
+        }
+        
+        // Join an existing game
+        function joinGame() {
+            const code = joinCodeInput.value.trim().toUpperCase();
+            if (!code) {
+                alert('Masukkan kode game!');
+                return;
+            }
+            
+            gameId = code;
+            gameRef = database.ref(`games/${gameId}`);
+            
+            // Check if the game exists
+            gameRef.once('value', (snapshot) => {
+                const gameData = snapshot.val();
+                
+                if (!gameData) {
+                    alert('Game tidak ditemukan!');
+                    return;
+                }
+                
+                if (gameData.player2) {
+                    alert('Game sudah penuh!');
+                    return;
+                }
+                
+                // Join as player 2
+                playerId = 'player2';
+                playerSymbol = 'O';
+                
+                // Update player 2 status
+                gameRef.update({
+                    player2: true
+                });
+                
+                // Get current game state
+                gameState = gameData.board;
+                
+                // Listen for changes in the game state
+                setupGameListeners();
+                
+                // Switch to game screen
+                lobbyScreen.style.display = 'none';
+                gameScreen.style.display = 'block';
+                
+                // Update the board
+                updateBoard();
+            });
+        }
+        
+        // Setup Firebase game listeners
+        function setupGameListeners() {
+            gameRef.on('value', (snapshot) => {
+                const gameData = snapshot.val();
+                
+                if (!gameData) return;
+                
+                // If both players have joined, start the game
+                if (gameData.player1 && gameData.player2 && lobbyScreen.style.display !== 'none') {
+                    lobbyScreen.style.display = 'none';
+                    gameScreen.style.display = 'block';
+                }
+                
+                // Update current turn
+                currentTurn = gameData.currentTurn;
+                updateTurnIndicator();
+                
+                // Update game state
+                if (gameData.board) {
+                    gameState = gameData.board;
+                    updateBoard();
+                }
+                
+                // Update game status
+                gameActive = gameData.gameActive;
+                
+                // Check for winner
+                if (gameData.winner) {
+                    displayWinner(gameData.winner);
+                }
+            });
+        }
+        
+        // Update the board based on current game state
+        function updateBoard() {
+            cells.forEach((cell, index) => {
+                cell.textContent = gameState[index];
+                cell.className = 'cell';
+                
+                if (gameState[index] === 'X') {
+                    cell.classList.add('x');
+                } else if (gameState[index] === 'O') {
+                    cell.classList.add('o');
+                }
+            });
+        }
+        
+        // Update turn indicator
+        function updateTurnIndicator() {
+            if (currentTurn === 'player1') {
+                playerX.classList.add('active');
+                playerO.classList.remove('active');
+                statusDisplay.textContent = playerId === 'player1' ? 'Giliran Anda' : 'Giliran lawan';
+            } else {
+                playerO.classList.add('active');
+                playerX.classList.remove('active');
+                statusDisplay.textContent = playerId === 'player2' ? 'Giliran Anda' : 'Giliran lawan';
+            }
+        }
+        
+        // Handle cell click
+        function handleCellClick(e) {
+            const cell = e.target;
+            const index = cell.getAttribute('data-index');
+            
+            // Check if it's the player's turn and the cell is empty
+            if (!gameActive || currentTurn !== playerId || gameState[index] !== '') {
+                return;
+            }
+            
+            // Update game state
+            gameState[index] = playerSymbol;
+            
+            // Update Firebase
+            gameRef.update({
+                board: gameState,
+                currentTurn: playerId === 'player1' ? 'player2' : 'player1'
+            });
+            
+            // Check for winner
+            checkWinner();
+        }
+        
+        // Check for a winner
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+            
+            let winner = null;
+            
+            // Check for winner
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                    winner = gameState[a];
+                    break;
+                }
+            }
+            
+            // Check for draw
+            const isDraw = !gameState.includes('') && !winner;
+            
+            if (winner || isDraw) {
+                gameRef.update({
+                    winner: winner || 'draw',
+                    gameActive: false
+                });
+            }
+        }
+        
+        // Display winner
+        function displayWinner(winner) {
+            if (winner === 'draw') {
+                winningMessage.textContent = 'Permainan Seri!';
+                winningMessage.className = 'winning-message draw';
+            } else {
+                winningMessage.textContent = `Pemain ${winner} Menang!`;
+                winningMessage.className = `winning-message ${winner.toLowerCase()}-wins`;
+            }
+            
+            winningMessage.style.display = 'block';
+            playAgainBtn.classList.remove('hidden');
+            statusDisplay.textContent = '';
+        }
+        
+        // Play again
+        function playAgain() {
+            // Reset game state
+            gameState = Array(9).fill('');
+            
+            // Update Firebase
+            gameRef.update({
+                board: gameState,
+                currentTurn: 'player1',
+                winner: null,
+                gameActive: true
+            });
+            
+            // Reset UI
+            winningMessage.style.display = 'none';
+            playAgainBtn.classList.add('hidden');
+            updateBoard();
+        }
+        
+        // Return to lobby
+        function returnToLobby() {
+            // Disconnect from current game
+            if (gameRef) {
+                gameRef.off();
+            }
+            
+            // Reset game variables
+            gameId = null;
+            playerId = null;
+            playerSymbol = null;
+            currentTurn = null;
+            gameState = null;
+            gameRef = null;
+            
+            // Reset UI
+            gameScreen.style.display = 'none';
+            lobbyScreen.style.display = 'block';
+            initialMenu.classList.remove('hidden');
+            waitingArea.classList.add('hidden');
+            joinCodeInput.value = '';
+            winningMessage.style.display = 'none';
+            playAgainBtn.classList.add('hidden');
+        }
+        
+        // Event listeners
+        createGameBtn.addEventListener('click', createGame);
+        joinGameBtn.addEventListener('click', joinGame);
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        playAgainBtn.addEventListener('click', playAgain);
+        returnLobbyBtn.addEventListener('click', returnToLobby);
+
+        // Allow Enter key to submit join code
+        joinCodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinGame();
+            }
+        });
+    </script>
+</body>
+</html>
